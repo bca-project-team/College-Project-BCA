@@ -10,6 +10,7 @@ This project aims to improve users’ ability to maintain focus while studying o
 - **Srijan Poudel**
 - **Robin Singh Rana**
 - **Priyanshu**
+- **Priyanshu T Negi**
 
 ---
 
