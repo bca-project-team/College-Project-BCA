@@ -2,6 +2,7 @@ import os
 import csv
 import datetime
 import subprocess
+import sys
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -34,14 +35,13 @@ def main():
     if mode_choice == "1":
         log_session(name, goal_hours, "Camera Mode")
         print("\nLaunching Camera Focus Mode...")
-        subprocess.run(["python", r"C:\Users\Acer\Desktop\college-project\focus_system\s6focus_cam.py"])
+        subprocess.run([sys.executable, r"C:\Users\Acer\Desktop\college-project\focus_system\s6focus_cam.py"])
     elif mode_choice == "2":
         log_session(name, goal_hours, "No-Camera Mode")
         print("\nLaunching No-Camera Focus Mode...")
-        subprocess.run(["python", "s7focus_nocam.py"])
+        subprocess.run([sys.executable, "s7focus_nocam.py"])
     else:
         print("Invalid choice! Please restart.")
 
 if __name__ == "__main__":
     main()
-
