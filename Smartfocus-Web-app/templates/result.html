@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Result</title>
+</head>
+<body>
+
+<h2>Session Status</h2>
+
+{% if result %}
+    <p><b>User:</b> {{ result.user }}</p>
+    <p><b>Mode:</b> {{ result.mode }}</p>
+    <p><b>Focused Seconds:</b> {{ result.focused_seconds }}</p>
+    <p><b>Distracted Seconds:</b> {{ result.distracted_seconds }}</p>
+    <p><b>Goal Achieved:</b> {{ result.goal_achieved }}</p>
+
+    <a href="/graph?user={{ result.user }}">Show Progress / Degrade Graph</a><br><br>
+{% else %}
+    <p>Session running…</p>
+{% endif %}
+
+<a href="/stop">
+    <button>Stop Session</button>
+</a>
+
+<br><br>
+<a href="/">Back to Home</a>
+
+</body>
+</html>
