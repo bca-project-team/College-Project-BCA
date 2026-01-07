@@ -1,12 +1,13 @@
-# focus/session.py
+# smart_focus/focus/session.py
 import time
-from smart_focus.utils.logger import log_timeline
-from smart_focus.utils.logger import log_session
+from smart_focus.utils.alert import show_distraction_alert
+from smart_focus.utils.logger import log_timeline, log_session
+
 
 class FocusSession:
     """
     Core session manager for Smart Study Focus System.
-    This class is independent of camera or no-camera logic.
+    Handles time tracking, alerts, and logging.
     """
 
     def __init__(self, user_name, goal_hours, mode):
@@ -14,6 +15,7 @@ class FocusSession:
         self.goal_hours = float(goal_hours)
         self.mode = mode
 
+        # --- Time tracking ---
         self.start_time = None
         self.last_update_time = None
 
@@ -23,47 +25,83 @@ class FocusSession:
         self.current_status = "Not Started"
         self.running = False
 
+        # --- Smart Alert config ---
+        self.distraction_threshold = 120  # seconds
+        self._distracted_streak = 0.0
+        self._alert_sent = False
+
+    # -----------------------
+    # Start session
+    # -----------------------
     def start(self):
-        """Start the focus session"""
         self.start_time = time.time()
         self.last_update_time = self.start_time
         self.current_status = "Focused"
         self.running = True
 
+    # -----------------------
+    # Update focus status
+    # -----------------------
     def update_status(self, status):
-        """
-        Update focus status.
-        status should be either 'Focused' or 'Distracted'
-        """
         if not self.running:
             return
 
         now = time.time()
         elapsed = now - self.last_update_time
 
+        # ---- Time accounting ----
         if self.current_status == "Focused":
             self.focused_seconds += elapsed
-        else:
+        elif self.current_status == "Distracted":
             self.distracted_seconds += elapsed
 
+        # ---- Update status ----
         self.current_status = status
         self.last_update_time = now
-        log_timeline(user=self.user_name,
-        mode=self.mode,
-        status=status
+
+        # ---- Timeline logging ----
+        log_timeline(
+            user=self.user_name,
+            mode=self.mode,
+            status=status
         )
 
+        # ---- Smart Distraction Alert Logic ----
+        if status == "Distracted":
+            self._distracted_streak += elapsed
+
+            if (
+                self._distracted_streak >= self.distraction_threshold
+                and not self._alert_sent
+            ):
+                show_distraction_alert(
+                    self.user_name,
+                    self._distracted_streak
+                )
+                self._alert_sent = True
+        else:
+            # Focus regained → reset alert state
+            self._distracted_streak = 0.0
+            self._alert_sent = False
+
+    # -----------------------
+    # Stop session
+    # -----------------------
     def stop(self):
-        """Stop the session and finalize time"""
         if not self.running:
             return
 
+        # Final update
         self.update_status(self.current_status)
         self.running = False
+
+        # ---- Session summary logging ----
         log_session(self.summary())
 
+    # -----------------------
+    # Session summary
+    # -----------------------
     def summary(self):
-        """Return session summary (used by web app & graphs)"""
         total_seconds = self.focused_seconds + self.distracted_seconds
 
         return {
