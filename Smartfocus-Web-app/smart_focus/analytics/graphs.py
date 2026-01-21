@@ -1,31 +1,23 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+import os
 
-TIMELINE_FILE = "data/timeline.csv"
+def build_focus_graph(data_dir, user_name):
+    timeline_file = os.path.join(data_dir, "timeline.csv")
 
+    if not os.path.exists(timeline_file):
+        return None
 
-def plot_focus_progress(user_name):
-    df = pd.read_csv(TIMELINE_FILE)
+    df = pd.read_csv(timeline_file)
+    df["user"] = df["user"].str.strip().str.lower()
+    df["status"] = df["status"].str.strip().str.lower()
 
+    user_name = user_name.strip().lower()
     df = df[df["user"] == user_name]
 
     if df.empty:
-        print("No data found for user")
-        return
+        return None
 
-    # Convert status to numeric
-    df["focus_score"] = df["status"].apply(
-        lambda x: 1 if x == "Focused" else 0
-    )
-
-    df["time_index"] = range(len(df))
-
-    plt.figure(figsize=(10, 4))
-    plt.plot(df["time_index"], df["focus_score"], marker="o")
-    plt.yticks([0, 1], ["Distracted", "Focused"])
-    plt.xlabel("Time")
-    plt.ylabel("Focus Status")
-    plt.title("Focus Progress / Degradation Over Time")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    return {
+        "x": df["timestamp"].tolist(),
+        "y": [1 if s == "focused" else 0 for s in df["status"]]
+    }

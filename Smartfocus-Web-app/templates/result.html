@@ -1,30 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Session Result</title>
+    <meta charset="UTF-8">
+    <title>Session Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e5e7eb;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 500px;
+            background: #020617;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        h2 { text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; font-size: 14px; color: #9ca3af; margin-bottom: 24px; }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1f2937;
+            font-size: 14px;
+        }
+
+        .label { color: #9ca3af; }
+        .value { font-weight: 600; }
+
+        .score {
+            text-align: center;
+            font-size: 34px;
+            font-weight: 700;
+            margin: 20px 0;
+            color: #22c55e;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .success { background: #16a34a; }
+        .fail { background: #dc2626; }
+
+        .actions {
+            margin-top: 24px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-secondary { background: #1f2937; color: #e5e7eb; }
+
+        footer {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Session Status</h2>
+<div class="card">
 
-{% if result %}
-    <p><b>User:</b> {{ result.user }}</p>
-    <p><b>Mode:</b> {{ result.mode }}</p>
-    <p><b>Focused Seconds:</b> {{ result.focused_seconds }}</p>
-    <p><b>Distracted Seconds:</b> {{ result.distracted_seconds }}</p>
-    <p><b>Goal Achieved:</b> {{ result.goal_achieved }}</p>
+    <h2>Session Summary</h2>
+    <div class="subtitle">Your focus performance overview</div>
 
-    <a href="/graph?user={{ result.user }}">Show Progress / Degrade Graph</a><br><br>
-{% else %}
-    <p>Session running…</p>
-{% endif %}
+    {% if result %}
 
-<a href="/stop">
-    <button>Stop Session</button>
-</a>
+        <div class="row">
+            <span class="label">User</span>
+            <span class="value">{{ result["user"] }}</span>
+        </div>
 
-<br><br>
-<a href="/">Back to Home</a>
+        <div class="row">
+            <span class="label">Mode</span>
+            <span class="value">{{ result["mode"] }}</span>
+        </div>
+
+        <div class="row">
+            <span class="label">Focused Time</span>
+            <span class="value">{{ result["focused_seconds"] }} sec</span>
+        </div>
+
+        <div class="row">
+            <span class="label">Distracted Time</span>
+            <span class="value">{{ result["distracted_seconds"] }} sec</span>
+        </div>
+
+        <div class="row">
+            <span class="label">Goal Status</span>
+            <span class="value">
+                {% if result["goal_achieved"] %}
+                    <span class="badge success">Achieved</span>
+                {% else %}
+                    <span class="badge fail">Not Achieved</span>
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="score">
+            {{ result.focus_score | default(0) }}/100
+        </div>
+
+    {% else %}
+        <p style="text-align:center;color:#9ca3af;">
+            No session data available yet.
+        </p>
+    {% endif %}
+
+    <div class="actions">
+        <a class="btn btn-primary" href="/graph?user={{ result['user'] | lower | trim if result }}">
+            View Focus Graph
+        </a>
+        <a class="btn btn-secondary" href="/history">View Session History</a>
+        <a class="btn btn-secondary" href="/">Back to Home</a>
+    </div>
+
+    <footer>SmartFocus • Session Report</footer>
+
+</div>
 
 </body>
 </html>

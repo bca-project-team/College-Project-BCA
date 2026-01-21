@@ -1,28 +1,231 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Smart Study Focus</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <title>Smart Study Focus System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #e5e7eb;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 460px;
+      background: #020617;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 13px;
+      margin-bottom: 6px;
+      display: block;
+      color: #cbd5f5;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 14px;
+      background: #020617;
+      color: #e5e7eb;
+      outline: 1px solid #334155;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid #3b82f6;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .btn-start {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-stop {
+      background: #dc2626;
+      color: white;
+      display: none;
+    }
+
+    .btn-secondary {
+      background: #1f2937;
+      color: #e5e7eb;
+      margin-top: 12px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 12px;
+      display: none;
+      border: 1px solid #334155;
+    }
+
+    .status {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 14px;
+      color: #22c55e;
+      display: none;
+    }
+
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>Smart Study Focus System</h1>
+<div class="app">
 
-<form action="/start" method="post">
-    <label>User Name:</label><br>
-    <input type="text" name="user" required><br><br>
+  <h1>Smart Study Focus</h1>
+  <div class="subtitle">AI-based focus tracking (Live Camera)</div>
 
-    <label>Goal Hours:</label><br>
-    <input type="number" step="0.1" name="goal" required><br><br>
+  <form id="startForm">
 
-    <label>Mode:</label><br>
+    <label>User Name</label>
+    <input type="text" name="user" required>
+
+    <label>Goal (hours)</label>
+    <input type="number" step="0.1" name="goal" required>
+
+    <label>Mode</label>
     <select name="mode">
-        <option value="nocamera">No Camera</option>
-        <option value="camera">Camera</option>
-    </select><br><br>
+      <option value="nocamera">No Camera</option>
+      <option value="camera">Camera Based (Web)</option>
+    </select>
 
-    <button type="submit">Start Session</button>
-</form>
+    <button type="button" class="btn btn-start" onclick="startSession()">
+      Start Focus Session
+    </button>
+
+    <button type="button" class="btn btn-stop" id="stopBtn" onclick="stopSession()">
+      Stop Session
+    </button>
+
+  </form>
+
+  <!-- LIVE CAMERA PREVIEW -->
+  <video id="camera" autoplay muted playsinline></video>
+
+  <div class="status" id="statusText">
+    Focus session running…
+  </div>
+
+  <a href="/history">
+    <button class="btn btn-secondary">View Session History</button>
+  </a>
+
+  <footer>SmartFocus • College Project</footer>
+
+</div>
+
+<script>
+let stream = null;
+
+async function startCamera() {
+  const video = document.getElementById("camera");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Camera API not supported");
+    return;
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.style.display = "block";
+  } catch (err) {
+    alert("Camera permission denied");
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+}
+
+function startSession() {
+  const form = document.getElementById("startForm");
+
+  const data = {
+    user: form.user.value,
+    goal: form.goal.value,
+    mode: form.mode.value
+  };
+
+  if (data.mode === "camera") {
+    startCamera();
+  }
+
+  fetch("/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    document.getElementById("stopBtn").style.display = "block";
+    document.getElementById("statusText").style.display = "block";
+  })
+  .catch(() => alert("Failed to start session"));
+}
+
+function stopSession() {
+  stopCamera();
+
+  fetch("/stop", { method: "POST" })
+    .then(() => window.location.href = "/result")
+    .catch(() => alert("Failed to stop session"));
+}
+</script>
 
 </body>
 </html>

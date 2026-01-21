@@ -1,4 +1,5 @@
 # smart_focus/focus/session.py
+
 import time
 from smart_focus.utils.alert import show_distraction_alert
 from smart_focus.utils.logger import log_timeline, log_session
@@ -7,7 +8,7 @@ from smart_focus.utils.logger import log_timeline, log_session
 class FocusSession:
     """
     Core session manager for Smart Study Focus System.
-    Handles time tracking, alerts, and logging.
+    Handles time tracking, alerts, scoring, and logging.
     """
 
     def __init__(self, user_name, goal_hours, mode):
@@ -15,7 +16,9 @@ class FocusSession:
         self.goal_hours = float(goal_hours)
         self.mode = mode
 
-        # --- Time tracking ---
+        # -----------------------
+        # Time tracking
+        # -----------------------
         self.start_time = None
         self.last_update_time = None
 
@@ -25,7 +28,9 @@ class FocusSession:
         self.current_status = "Not Started"
         self.running = False
 
-        # --- Smart Alert config ---
+        # -----------------------
+        # Smart alert config
+        # -----------------------
         self.distraction_threshold = 120  # seconds
         self._distracted_streak = 0.0
         self._alert_sent = False
@@ -38,6 +43,11 @@ class FocusSession:
         self.last_update_time = self.start_time
         self.current_status = "Focused"
         self.running = True
+        log_timeline(
+            user=self.user_name,
+            mode=self.mode,
+            status="Focused"
+        )
 
     # -----------------------
     # Update focus status
@@ -66,7 +76,7 @@ class FocusSession:
             status=status
         )
 
-        # ---- Smart Distraction Alert Logic ----
+        # ---- Smart Distraction Alert ----
         if status == "Distracted":
             self._distracted_streak += elapsed
 
@@ -76,7 +86,7 @@ class FocusSession:
             ):
                 show_distraction_alert(
                     self.user_name,
-                    self._distracted_streak
+                    int(self._distracted_streak)
                 )
                 self._alert_sent = True
         else:
@@ -85,24 +95,33 @@ class FocusSession:
             self._alert_sent = False
 
     # -----------------------
+    # Calculate focus score
+    # -----------------------
+    def calculate_score(self):
+        total = self.focused_seconds + self.distracted_seconds
+        if total == 0:
+            return 0
+        return int((self.focused_seconds / total) * 100)
+
+    # -----------------------
     # Stop session
     # -----------------------
     def stop(self):
         if not self.running:
             return
 
-        # Final update
+        # Final time update
         self.update_status(self.current_status)
         self.running = False
 
-        # ---- Session summary logging ----
+        # Save session summary
         log_session(self.summary())
 
     # -----------------------
     # Session summary
     # -----------------------
     def summary(self):
-        total_seconds = self.focused_seconds + self.distracted_seconds
+        total = self.focused_seconds + self.distracted_seconds
 
         return {
             "user": self.user_name,
@@ -111,6 +130,7 @@ class FocusSession:
             "focused_seconds": int(self.focused_seconds),
             "distracted_seconds": int(self.distracted_seconds),
             "focused_minutes": int(self.focused_seconds / 60),
+            "focus_score": self.calculate_score(),   
             "goal_achieved": (self.focused_seconds / 3600) >= self.goal_hours,
-            "total_seconds": int(total_seconds)
+            "total_seconds": int(total)
         }
