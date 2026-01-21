@@ -1,54 +1,32 @@
 import base64
-import math
 import cv2
-import numpy as np
 import mediapipe as mp
+import numpy as np
+import time
+import math
+import threading
 
 from smart_focus.focus.session import FocusSession
 
 
-# ---------------------------------------------------
-# Helper: Decide focus using MediaPipe
-# ---------------------------------------------------
-def is_focused_mediapipe(face_landmarks):
-    top = face_landmarks.landmark[159]
-    bottom = face_landmarks.landmark[145]
-    left = face_landmarks.landmark[33]
-    right = face_landmarks.landmark[133]
-
-    def euclidean(p1, p2):
-        return math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
-
-    vertical = euclidean(top, bottom)
-    horizontal = euclidean(left, right)
-
-    if horizontal == 0:
-        return False
-
-    EAR = vertical / horizontal
-
-    # Blink / closed eyes
-    if EAR < 0.22:
-        return False
-
-    # Head direction
-    left_eye_x = face_landmarks.landmark[33].x
-    right_eye_x = face_landmarks.landmark[263].x
-
-    if abs(left_eye_x - right_eye_x) < 0.13:
-        return False
-
-    return True
+# ----------------------------
+# Thresholds (same as your file)
+# ----------------------------
+EAR_THRESHOLD = 0.22
+BLINK_MIN = 0.08
+BLINK_MAX = 0.5
+CLOSED_MIN = 1.0
+OPEN_DEBOUNCE = 0.25
+HORIZONTAL_THRESH = 0.13
 
 
-# ---------------------------------------------------
-# Web Camera Focus Tracker
-# ---------------------------------------------------
+def euclidean(p1, p2):
+    return math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+
+
 class CameraFocusTracker:
     """
-    Web-based camera focus tracker.
-    Receives frames from browser (base64),
-    processes them using MediaPipe.
+    Web Camera Focus Tracker (Blink + Debounce + Time-correct)
     """
 
     def __init__(self, user_name, goal_hours):
@@ -58,62 +36,147 @@ class CameraFocusTracker:
             mode="Camera"
         )
 
-        self.face_mesh = mp.solutions.face_mesh.FaceMesh(
-            refine_landmarks=True
-        )
+        self.face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
 
+        # ---- State machine vars ----
+        self.state = "no_face"
+        self.focus_status = "Distracted"
+
+        self.blink_start = None
+        self.blink_counted = False
+        self.open_start = None
+
+        self.current_status = "Distracted"
         self.running = True
+
         self.session.start()
 
-    # ------------------------------------------------
-    # Process ONE frame from browser
-    # ------------------------------------------------
+        # background time ticker (CRITICAL)
+        self.timer_thread = threading.Thread(
+            target=self._tick_time,
+            daemon=True
+        )
+        self.timer_thread.start()
+
+    # ----------------------------
+    # Time ticker
+    # ----------------------------
+    def _tick_time(self):
+        while self.running:
+            time.sleep(1)
+            self.session.update_status(self.current_status)
+
+    # ----------------------------
+    # Frame processing
+    # ----------------------------
     def process_frame(self, frame_base64):
         if not self.running:
             return {"status": "stopped"}
 
-        # Decode base64 image
         img_bytes = base64.b64decode(frame_base64.split(",")[1])
         img_array = np.frombuffer(img_bytes, np.uint8)
         frame = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(rgb_frame)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.face_mesh.process(rgb)
 
-        focused = False
+        now = time.time()
 
-        if results.multi_face_landmarks:
-            focused = is_focused_mediapipe(
-                results.multi_face_landmarks[0]
-            )
+        # ----------------------------
+        # No face detected
+        # ----------------------------
+        if not results.multi_face_landmarks:
+            self.state = "no_face"
+            self.focus_status = "Distracted"
+            self.blink_start = None
+            self.blink_counted = False
+            self.open_start = None
 
-        # Update session + CSV timeline
-        if focused:
-            self.session.update_status("Focused")
         else:
-            self.session.update_status("Distracted")
+            face = results.multi_face_landmarks[0]
+
+            top = face.landmark[159]
+            bottom = face.landmark[145]
+            left = face.landmark[33]
+            right = face.landmark[133]
+
+            ver = euclidean(top, bottom)
+            hor = euclidean(left, right)
+            EAR = ver / hor if hor != 0 else 0
+            eyes_open = EAR > EAR_THRESHOLD
+
+            # ----------------------------
+            # Eyes closed logic
+            # ----------------------------
+            if not eyes_open:
+                self.open_start = None
+                if self.blink_start is None:
+                    self.blink_start = now
+                    self.blink_counted = False
+
+                closed_duration = now - self.blink_start
+
+                if closed_duration > CLOSED_MIN:
+                    self.state = "closed"
+                    self.focus_status = "Distracted"
+
+                elif BLINK_MIN < closed_duration <= BLINK_MAX:
+                    self.state = "blink"
+                    self.focus_status = "Focused"  # blink ≠ distracted
+                    self.blink_counted = True
+
+                else:
+                    self.focus_status = "Focused"
+
+            # ----------------------------
+            # Eyes open logic
+            # ----------------------------
+            else:
+                if self.open_start is None:
+                    self.open_start = now
+
+                open_duration = now - self.open_start
+
+                if self.state in ("blink", "closed", "recovering"):
+                    if open_duration >= OPEN_DEBOUNCE:
+                        self.state = "focused"
+                        self.focus_status = "Focused"
+                        self.blink_start = None
+                        self.blink_counted = False
+                        self.open_start = None
+                    else:
+                        self.state = "recovering"
+                        self.focus_status = "Distracted"
+                else:
+                    self.state = "focused"
+                    self.focus_status = "Focused"
+                    self.blink_start = None
+                    self.blink_counted = False
+
+            # ----------------------------
+            # Head direction check
+            # ----------------------------
+            if self.state == "focused":
+                left_eye_x = face.landmark[33].x
+                right_eye_x = face.landmark[263].x
+                if abs(left_eye_x - right_eye_x) < HORIZONTAL_THRESH:
+                    self.focus_status = "Distracted"
+
+        # ----------------------------
+        # Update session status
+        # ----------------------------
+        self.current_status = "Focused" if self.focus_status == "Focused" else "Distracted"
 
         return {
-            "status": "Focused" if focused else "Distracted",
+            "status": self.current_status,
             "focused_seconds": int(self.session.focused_seconds),
-            "distracted_seconds": int(self.session.distracted_seconds)
+            "distracted_seconds": int(self.session.distracted_seconds),
+            "focus_score": self.session.calculate_score()
         }
 
-    # ------------------------------------------------
-    # Live data for UI
-    # ------------------------------------------------
-    def get_live_data(self):
-        summary = self.session.summary()
-        return {
-            "status": self.session.current_status,
-            "focused_seconds": summary["focused_seconds"],
-            "distracted_seconds": summary["distracted_seconds"],
-            "focus_score": summary["focus_score"]
-        }
-
-    # ------------------------------------------------
-    # Stop session cleanly
-    # ------------------------------------------------
+    # ----------------------------
+    # Stop session
+    # ----------------------------
     def stop(self):
         self.running = False
         self.session.stop()

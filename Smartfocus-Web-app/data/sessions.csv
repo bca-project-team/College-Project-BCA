@@ -1,4 +1,0 @@
-timestamp,user,mode,focused_seconds,distracted_seconds,goal_hours,goal_achieved,focus_score
-2026-01-21 16:19:59,srijan,no_camera,20,0,0.1,False,100
-2026-01-21 16:24:09,srijan,no_camera,5,0,0.1,False,100
-2026-01-21 16:24:57,srijan,camera,34,0,0.1,False,100
