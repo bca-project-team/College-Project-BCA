@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weekly Focus Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Inter, sans-serif;
+      color: #e5e7eb;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 16px;
+      padding: 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #334155;
+      font-size: 15px;
+    }
+
+    .stat:last-child {
+      border-bottom: none;
+    }
+
+    .highlight {
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    .btn {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+    }
+
+    .empty {
+      text-align: center;
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>📅 Weekly Report</h1>
+  <div class="subtitle">Last 7 days focus summary</div>
+
+  {% if report %}
+    <div class="stat">
+      <span>Total Focus Time</span>
+      <span class="highlight">{{ report.total_focus_minutes }} min</span>
+    </div>
+
+    <div class="stat">
+      <span>Average Per Day</span>
+      <span>{{ report.average_daily_minutes }} min</span>
+    </div>
+
+    <div class="stat">
+      <span>Days Tracked</span>
+      <span>{{ report.days_tracked }}</span>
+    </div>
+
+    <div class="stat">
+      <span>Goal Achieved Days</span>
+      <span>{{ report.goal_days }}</span>
+    </div>
+  {% else %}
+    <p class="empty">No weekly data available.</p>
+  {% endif %}
+
+  <button class="btn" onclick="window.location.href='/'">
+    Back to Home
+  </button>
+</div>
+
+</body>
+</html>

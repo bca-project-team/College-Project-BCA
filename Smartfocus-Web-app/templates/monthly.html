@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Focus Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020617, #1e293b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Inter, sans-serif;
+      color: #e5e7eb;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: #020617;
+      border-radius: 16px;
+      padding: 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      padding: 12px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #334155;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+
+    .stat strong {
+      color: #38bdf8;
+    }
+
+    .btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #22c55e;
+      color: black;
+    }
+
+    .empty {
+      text-align: center;
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>📊 Monthly Report</h1>
+  <div class="subtitle">Current month focus analytics</div>
+
+  {% if report %}
+    <div class="stat">
+      <strong>Total Focus:</strong> {{ report.total_focus_minutes }} minutes
+    </div>
+
+    <div class="stat">
+      <strong>Average Per Day:</strong> {{ report.average_daily_minutes }} minutes
+    </div>
+
+    <div class="stat">
+      <strong>Days Tracked:</strong> {{ report.days_tracked }}
+    </div>
+
+    <div class="stat">
+      <strong>Goal Achieved Days:</strong> {{ report.goal_days }}
+    </div>
+  {% else %}
+    <p class="empty">No monthly data available.</p>
+  {% endif %}
+
+  <button class="btn" onclick="window.location.href='/'">
+    Back to Home
+  </button>
+</div>
+
+</body>
+</html>

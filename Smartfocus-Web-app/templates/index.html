@@ -64,10 +64,6 @@
       outline: 1px solid #334155;
     }
 
-    input:focus, select:focus {
-      outline: 2px solid #3b82f6;
-    }
-
     .btn {
       width: 100%;
       padding: 12px;
@@ -79,22 +75,9 @@
       margin-top: 6px;
     }
 
-    .btn-start {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .btn-stop {
-      background: #dc2626;
-      color: white;
-      display: none;
-    }
-
-    .btn-secondary {
-      background: #1f2937;
-      color: #e5e7eb;
-      margin-top: 12px;
-    }
+    .btn-start { background: #3b82f6; color: white; }
+    .btn-stop { background: #dc2626; color: white; display: none; }
+    .btn-secondary { background: #1f2937; color: #e5e7eb; }
 
     video {
       width: 100%;
@@ -129,7 +112,6 @@
   <div class="subtitle">AI-based focus tracking (Live Camera)</div>
 
   <form id="startForm">
-
     <label>User Name</label>
     <input type="text" name="user" required>
 
@@ -149,58 +131,40 @@
     <button type="button" class="btn btn-stop" id="stopBtn" onclick="stopSession()">
       Stop Session
     </button>
-
   </form>
 
-  <!-- LIVE CAMERA PREVIEW -->
   <video id="camera" autoplay muted playsinline></video>
 
-  <div class="status" id="statusText">
-    Focus session running…
-  </div>
+  <div class="status" id="statusText">Focus session running…</div>
+
+  <button class="btn btn-secondary" onclick="openWeeklyReport()">View Weekly Report</button>
+  <button class="btn btn-secondary" onclick="openMonthlyReport()">View Monthly Report</button>
 
   <a href="/history">
     <button class="btn btn-secondary">View Session History</button>
   </a>
 
   <footer>SmartFocus • College Project</footer>
-
 </div>
 
 <script>
 let stream = null;
 let frameInterval = null;
+let currentUser = null;
 
-/* ---------------------------
-   CAMERA PREVIEW
---------------------------- */
+/* CAMERA */
 async function startCamera() {
   const video = document.getElementById("camera");
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Camera API not supported");
-    return;
-  }
-
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
-    video.style.display = "block";
-  } catch (err) {
-    alert("Camera permission denied");
-  }
+  stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
+  video.style.display = "block";
 }
 
 function stopCamera() {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-  }
+  if (stream) stream.getTracks().forEach(t => t.stop());
 }
 
-/* ---------------------------
-   FRAME SENDING (IMPORTANT)
---------------------------- */
+/* FRAME SENDING */
 function sendFrameToBackend() {
   const video = document.getElementById("camera");
   if (!video || video.videoWidth === 0) return;
@@ -208,66 +172,80 @@ function sendFrameToBackend() {
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
-
-  const frame = canvas.toDataURL("image/jpeg");
+  canvas.getContext("2d").drawImage(video, 0, 0);
 
   fetch("/frame", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ frame: frame })
+    body: JSON.stringify({ frame: canvas.toDataURL("image/jpeg") })
   });
 }
 
 function startSendingFrames() {
-  frameInterval = setInterval(sendFrameToBackend, 1000); // 1 frame/sec
+  frameInterval = setInterval(sendFrameToBackend, 1000);
 }
 
 function stopSendingFrames() {
-  if (frameInterval) {
-    clearInterval(frameInterval);
-    frameInterval = null;
-  }
+  if (frameInterval) clearInterval(frameInterval);
 }
 
-/* ---------------------------
-   SESSION CONTROL
---------------------------- */
+/* SESSION CONTROL */
 function startSession() {
   const form = document.getElementById("startForm");
+  currentUser = form.user.value.trim().toLowerCase();
 
   const data = {
-    user: form.user.value,
+    user: currentUser,
     goal: form.goal.value,
     mode: form.mode.value
   };
 
   if (data.mode === "camera") {
     startCamera();
-    startSendingFrames();   // 🔥 KEY LINE
+    startSendingFrames();
   }
 
   fetch("/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
-  })
-  .then(() => {
+  }).then(() => {
     document.getElementById("stopBtn").style.display = "block";
     document.getElementById("statusText").style.display = "block";
-  })
-  .catch(() => alert("Failed to start session"));
+  });
 }
 
 function stopSession() {
-  stopSendingFrames();   // 🔥 KEY LINE
+  stopSendingFrames();
   stopCamera();
 
   fetch("/stop", { method: "POST" })
-    .then(() => window.location.href = "/result")
-    .catch(() => alert("Failed to stop session"));
+    .then(() => window.location.href = "/result");
+}
+function getEnteredUser() {
+  const form = document.getElementById("startForm");
+  return form.user.value.trim().toLowerCase();
+}
+/* REPORTS */
+function openWeeklyReport() {
+  const user = currentUser || getEnteredUser();
+
+  if (!user) {
+    alert("Please enter a user name");
+    return;
+  }
+
+  window.location.href = `/weekly-report?user=${user}`;
+}
+function openMonthlyReport() {
+  const user = currentUser || getEnteredUser();
+
+  if (!user) {
+    alert("Please enter a user name");
+    return;
+  }
+
+  window.location.href = `/monthly-report?user=${user}`;
 }
 </script>
 

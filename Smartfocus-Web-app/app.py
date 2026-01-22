@@ -8,6 +8,8 @@ from smart_focus.focus.no_camera import NoCameraFocusTracker
 from smart_focus.focus.camera import CameraFocusTracker
 from smart_focus.utils.logger import init_logger
 from smart_focus.analytics.graphs import build_focus_graph
+from smart_focus.analytics.reports import get_weekly_report
+from smart_focus.analytics.reports import get_monthly_report
 
 app = Flask(__name__)
 
@@ -136,6 +138,30 @@ def receive_frame():
         return jsonify({"status": "no frame"})
 
     return jsonify(tracker.process_frame(frame))
+
+@app.route("/weekly-report")
+def weekly_report():
+    user = request.args.get("user")
+
+    report = get_weekly_report(DATA_DIR, user)
+
+    return render_template(
+        "weekly.html",
+        report=report,
+        user=user
+    )
+@app.route("/monthly-report")
+def monthly_report():
+    user = request.args.get("user")
+
+    report = get_monthly_report(DATA_DIR, user)
+
+    return render_template(
+        "monthly.html",
+        report=report,
+        user=user
+    )
+
 
 if __name__ == "__main__":
     print(" SmartFocus Web App Starting...")
