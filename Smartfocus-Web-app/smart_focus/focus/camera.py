@@ -9,15 +9,12 @@ import threading
 from smart_focus.focus.session import FocusSession
 
 
-# ----------------------------
-# Thresholds (same as your file)
-# ----------------------------
 EAR_THRESHOLD = 0.22
 BLINK_MIN = 0.08
 BLINK_MAX = 0.5
 CLOSED_MIN = 1.0
 OPEN_DEBOUNCE = 0.25
-HORIZONTAL_THRESH = 0.13
+HEAD_TURN_THRESHOLD=0.12
 
 
 def euclidean(p1, p2):
@@ -26,49 +23,52 @@ def euclidean(p1, p2):
 
 class CameraFocusTracker:
     """
-    Web Camera Focus Tracker (Blink + Debounce + Time-correct)
+    FINAL CORRECT VERSION
+
+    - Camera decides ONLY Focused / Distracted
+    - Session updates time ONCE PER SECOND
+    - Timing is NOT dependent on frame rate
     """
 
     def __init__(self, user_name, goal_hours):
         self.session = FocusSession(
             user_name=user_name,
             goal_hours=goal_hours,
-            mode="Camera"
+            mode="camera"
         )
 
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
 
-        # ---- State machine vars ----
         self.state = "no_face"
-        self.focus_status = "Distracted"
+        self.current_status = "Distracted"
+        self.running = True
 
         self.blink_start = None
         self.blink_counted = False
         self.open_start = None
+        self.blink_count = 0
 
-        self.current_status = "Distracted"
-        self.running = True
-
+        # Start session timing
         self.session.start()
 
-        # background time ticker (CRITICAL)
+        # 🔥 HARD 1-SECOND TIMER (SOURCE OF TRUTH)
         self.timer_thread = threading.Thread(
-            target=self._tick_time,
+            target=self._time_loop,
             daemon=True
         )
         self.timer_thread.start()
 
-    # ----------------------------
-    # Time ticker
-    # ----------------------------
-    def _tick_time(self):
+    # =========================
+    # 1-SECOND TIME LOOP
+    # =========================
+    def _time_loop(self):
         while self.running:
             time.sleep(1)
             self.session.update_status(self.current_status)
 
-    # ----------------------------
-    # Frame processing
-    # ----------------------------
+    # =========================
+    # FRAME PROCESSING
+    # =========================
     def process_frame(self, frame_base64):
         if not self.running:
             return {"status": "stopped"}
@@ -81,16 +81,10 @@ class CameraFocusTracker:
         results = self.face_mesh.process(rgb)
 
         now = time.time()
+        focus_status = "Distracted"
 
-        # ----------------------------
-        # No face detected
-        # ----------------------------
         if not results.multi_face_landmarks:
             self.state = "no_face"
-            self.focus_status = "Distracted"
-            self.blink_start = None
-            self.blink_counted = False
-            self.open_start = None
 
         else:
             face = results.multi_face_landmarks[0]
@@ -102,14 +96,10 @@ class CameraFocusTracker:
 
             ver = euclidean(top, bottom)
             hor = euclidean(left, right)
-            EAR = ver / hor if hor != 0 else 0
+            EAR = ver / hor if hor else 0
             eyes_open = EAR > EAR_THRESHOLD
 
-            # ----------------------------
-            # Eyes closed logic
-            # ----------------------------
             if not eyes_open:
-                self.open_start = None
                 if self.blink_start is None:
                     self.blink_start = now
                     self.blink_counted = False
@@ -118,65 +108,43 @@ class CameraFocusTracker:
 
                 if closed_duration > CLOSED_MIN:
                     self.state = "closed"
-                    self.focus_status = "Distracted"
-
                 elif BLINK_MIN < closed_duration <= BLINK_MAX:
+                    if not self.blink_counted:
+                        self.blink_count += 1
+                        self.blink_counted = True
                     self.state = "blink"
-                    self.focus_status = "Focused"  # blink ≠ distracted
-                    self.blink_counted = True
-
-                else:
-                    self.focus_status = "Focused"
-
-            # ----------------------------
-            # Eyes open logic
-            # ----------------------------
-            else:
-                if self.open_start is None:
-                    self.open_start = now
-
-                open_duration = now - self.open_start
-
-                if self.state in ("blink", "closed", "recovering"):
-                    if open_duration >= OPEN_DEBOUNCE:
-                        self.state = "focused"
-                        self.focus_status = "Focused"
-                        self.blink_start = None
-                        self.blink_counted = False
-                        self.open_start = None
-                    else:
-                        self.state = "recovering"
-                        self.focus_status = "Distracted"
                 else:
                     self.state = "focused"
-                    self.focus_status = "Focused"
-                    self.blink_start = None
-                    self.blink_counted = False
+                    focus_status = "Focused"
 
-            # ----------------------------
-            # Head direction check
-            # ----------------------------
-            if self.state == "focused":
-                left_eye_x = face.landmark[33].x
-                right_eye_x = face.landmark[263].x
-                if abs(left_eye_x - right_eye_x) < HORIZONTAL_THRESH:
-                    self.focus_status = "Distracted"
+            else:
+                self.blink_start = None
+                self.blink_counted = False
+                self.state = "focused"
+                focus_status = "Focused"
 
-        # ----------------------------
-        # Update session status
-        # ----------------------------
-        self.current_status = "Focused" if self.focus_status == "Focused" else "Distracted"
+            nose_x = face.landmark[1].x
+            eye_center_x = (face.landmark[33].x + face.landmark[263].x) / 2
+            print(abs(nose_x-eye_center_x))
+            if abs(nose_x - eye_center_x) > HEAD_TURN_THRESHOLD:
+                focus_status = "Distracted"
+
+        #  THIS is what timer reads
+        self.current_status = focus_status
+        print("Status : ",self.current_status)
 
         return {
             "status": self.current_status,
+            "state": self.state,
+            "blinks": self.blink_count,
             "focused_seconds": int(self.session.focused_seconds),
             "distracted_seconds": int(self.session.distracted_seconds),
             "focus_score": self.session.calculate_score()
         }
 
-    # ----------------------------
-    # Stop session
-    # ----------------------------
+    # =========================
+    # STOP SESSION
+    # =========================
     def stop(self):
         self.running = False
         self.session.stop()

@@ -14,7 +14,7 @@ class FocusSession:
     def __init__(self, user_name, goal_hours, mode):
         self.user_name = user_name
         self.goal_hours = float(goal_hours)
-        self.mode = mode
+        self.mode = mode.lower()   # 🔥 normalize once
 
         # -----------------------
         # Time tracking
@@ -35,19 +35,25 @@ class FocusSession:
         self._distracted_streak = 0.0
         self._alert_sent = False
 
+        # 🔑 For clean timeline logging
+        self._last_logged_status = None
+
     # -----------------------
     # Start session
     # -----------------------
     def start(self):
         self.start_time = time.time()
         self.last_update_time = self.start_time
-        self.current_status = "Focused"
+        self.current_status = "Distracted"
         self.running = True
+
+        # ✅ Log real initial state
         log_timeline(
             user=self.user_name,
             mode=self.mode,
-            status="Focused"
+            status=self.current_status
         )
+        self._last_logged_status = self.current_status
 
     # -----------------------
     # Update focus status
@@ -69,12 +75,14 @@ class FocusSession:
         self.current_status = status
         self.last_update_time = now
 
-        # ---- Timeline logging ----
-        log_timeline(
-            user=self.user_name,
-            mode=self.mode,
-            status=status
-        )
+        # ---- Timeline logging (ONLY on change) ----
+        if status != self._last_logged_status:
+            log_timeline(
+                user=self.user_name,
+                mode=self.mode,
+                status=status
+            )
+            self._last_logged_status = status
 
         # ---- Smart Distraction Alert ----
         if status == "Distracted":
@@ -90,7 +98,6 @@ class FocusSession:
                 )
                 self._alert_sent = True
         else:
-            # Focus regained → reset alert state
             self._distracted_streak = 0.0
             self._alert_sent = False
 
@@ -110,11 +117,10 @@ class FocusSession:
         if not self.running:
             return
 
-        # Final time update
-        self.update_status(self.current_status)
+        # 🔥 Freeze time first
         self.running = False
+        self.update_status(self.current_status)
 
-        # Save session summary
         log_session(self.summary())
 
     # -----------------------
@@ -130,7 +136,7 @@ class FocusSession:
             "focused_seconds": int(self.focused_seconds),
             "distracted_seconds": int(self.distracted_seconds),
             "focused_minutes": int(self.focused_seconds / 60),
-            "focus_score": self.calculate_score(),   
+            "focus_score": self.calculate_score(),
             "goal_achieved": (self.focused_seconds / 3600) >= self.goal_hours,
             "total_seconds": int(total)
         }

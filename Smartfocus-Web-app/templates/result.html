@@ -96,6 +96,20 @@
 
     <h2>Session Summary</h2>
     <div class="subtitle">Your focus performance overview</div>
+    {% if alert_message %}
+<div style="
+    background:#7f1d1d;
+    color:#fecaca;
+    padding:12px;
+    border-radius:8px;
+    margin:16px 0;
+    text-align:center;
+    font-size:14px;
+    font-weight:600;
+">
+    {{ alert_message }}
+</div>
+{% endif %}
 
     {% if result %}
 

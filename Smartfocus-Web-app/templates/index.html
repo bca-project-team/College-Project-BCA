@@ -169,7 +169,11 @@
 
 <script>
 let stream = null;
+let frameInterval = null;
 
+/* ---------------------------
+   CAMERA PREVIEW
+--------------------------- */
 async function startCamera() {
   const video = document.getElementById("camera");
 
@@ -190,9 +194,47 @@ async function startCamera() {
 function stopCamera() {
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
+    stream = null;
   }
 }
 
+/* ---------------------------
+   FRAME SENDING (IMPORTANT)
+--------------------------- */
+function sendFrameToBackend() {
+  const video = document.getElementById("camera");
+  if (!video || video.videoWidth === 0) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
+
+  const frame = canvas.toDataURL("image/jpeg");
+
+  fetch("/frame", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ frame: frame })
+  });
+}
+
+function startSendingFrames() {
+  frameInterval = setInterval(sendFrameToBackend, 1000); // 1 frame/sec
+}
+
+function stopSendingFrames() {
+  if (frameInterval) {
+    clearInterval(frameInterval);
+    frameInterval = null;
+  }
+}
+
+/* ---------------------------
+   SESSION CONTROL
+--------------------------- */
 function startSession() {
   const form = document.getElementById("startForm");
 
@@ -204,6 +246,7 @@ function startSession() {
 
   if (data.mode === "camera") {
     startCamera();
+    startSendingFrames();   // 🔥 KEY LINE
   }
 
   fetch("/start", {
@@ -219,6 +262,7 @@ function startSession() {
 }
 
 function stopSession() {
+  stopSendingFrames();   // 🔥 KEY LINE
   stopCamera();
 
   fetch("/stop", { method: "POST" })
