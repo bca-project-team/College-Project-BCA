@@ -115,8 +115,24 @@
     <label>User Name</label>
     <input type="text" name="user" value="{{ user }}" readonly>
 
-    <label>Goal (hours)</label>
-    <input type="number" step="0.1" name="goal" required>
+    <label>Goal Time</label>
+
+    <input
+      type="number"
+      name="goal_hours"
+      min="0"
+      placeholder="Hours"
+      required
+>
+
+    <input
+      type="number"
+      name="goal_minutes"
+      min="0"
+      max="59"
+      placeholder="Minutes"
+      required
+>
 
     <label>Mode</label>
     <select name="mode">
@@ -200,11 +216,16 @@ function stopSendingFrames() {
 /* SESSION CONTROL */
 function startSession() {
   const form = document.getElementById("startForm");
+  const hours = parseInt(form.goal_hours.value) || 0;
+  const minutes = parseInt(form.goal_minutes.value) || 0;
+
+  const totalGoalSeconds = (hours * 3600) + (minutes * 60);
 
   const data = {
-    goal: form.goal.value,
-    mode: form.mode.value
-  };
+  goal_seconds: totalGoalSeconds,
+  mode: form.mode.value
+};
+  
 
   if (data.mode === "camera") {
     startCamera();

@@ -141,18 +141,19 @@ def start():
 
         data = request.get_json(force=True)
         user = session["user"]
-        goal = float(data.get("goal"))
+        goal_seconds = int(data.get("goal_seconds", 0))
+        goal_hours = goal_seconds / 3600
         mode = data.get("mode", "").strip().lower()
 
         session_result = None
-        print(f"▶ Starting session | user={user}, goal={goal}, mode={mode}")
+        print(f"▶ Starting session | user={user}, goal={goal_hours}, mode={mode}")
 
         if mode == "camera":
-            tracker = CameraFocusTracker(user, goal)
+            tracker = CameraFocusTracker(user, goal_hours)
         else:
             tracker = NoCameraFocusTracker(
                 user,
-                goal,
+                goal_hours,
                 alert_sound="alert2.wav",
                 warning_sound="alert1.wav"
             )
