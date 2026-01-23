@@ -108,7 +108,16 @@
   <button class="btn" onclick="window.location.href='/'">
     Back to Home
   </button>
-</div>
 
+  <button class="btn" onclick="sendParentReport()">Send Report to Parent</button>
+
+</div>
+<script>
+function sendParentReport() {
+  fetch(`/send-weekly-parent-report?user={{ user }}`)
+    .then(res => res.text())
+    .then(alert);
+}
+</script>
 </body>
 </html>

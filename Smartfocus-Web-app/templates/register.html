@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020617, #1e293b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      color: #e5e7eb;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #020617;
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #cbd5f5;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: none;
+      background: #020617;
+      color: #e5e7eb;
+      outline: 1px solid #334155;
+    }
+
+    input:focus {
+      outline: 2px solid #22c55e;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      background: #22c55e;
+      color: #020617;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>👨‍🎓 Student Registration</h1>
+  <div class="subtitle">Enter student & parent details (one-time)</div>
+
+  <form method="POST">
+    <label>Student Name</label>
+    <input name="user" placeholder="e.g. Srijan Poudel" required>
+
+    <label>Grade / Class</label>
+    <input name="grade" placeholder="e.g. 6" required>
+
+    <label>Student Phone</label>
+    <input name="student_phone" placeholder="Optional">
+
+    <label>Parent Name</label>
+    <input name="parent_name" placeholder="Parent / Guardian name" required>
+
+    <label>Parent Email</label>
+    <input type="email" name="parent_email" placeholder="parent@example.com" required>
+
+    <label>Parent Phone</label>
+    <input name="parent_phone" placeholder="Parent contact number" required>
+
+    <button type="submit">Register & Continue</button>
+  </form>
+</div>
+
+</body>
+</html>
