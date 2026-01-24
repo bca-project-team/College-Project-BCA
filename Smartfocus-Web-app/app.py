@@ -146,14 +146,14 @@ def start():
         mode = data.get("mode", "").strip().lower()
 
         session_result = None
-        print(f"▶ Starting session | user={user}, goal={goal_hours}, mode={mode}")
+        print(f"▶ Starting session | user={user}, goal={goal_seconds}, mode={mode}")
 
         if mode == "camera":
             tracker = CameraFocusTracker(user, goal_hours)
         else:
             tracker = NoCameraFocusTracker(
                 user,
-                goal_hours,
+                goal_seconds,
                 alert_sound="alert2.wav",
                 warning_sound="alert1.wav"
             )

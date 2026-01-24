@@ -11,19 +11,19 @@ from smart_focus.focus.session import FocusSession
 class NoCameraFocusTracker:
     """
     No-Camera Focus Tracker
-    Uses keyboard + mouse activity to detect focus.
+    Goal-aware presence & distraction logic (NO LOOPS).
     """
 
     def __init__(
         self,
         user_name,
-        goal_hours,
-        idle_limit=20,
-        idle_warning_time=10,
+        goal_seconds,
         alert_sound=None,
         warning_sound=None,
     ):
-        # 🔑 IMPORTANT: mode MUST be lowercase & consistent
+        # Convert goal to hours for session logging
+        goal_hours = goal_seconds / 3600
+
         self.session = FocusSession(
             user_name=user_name,
             goal_hours=goal_hours,
@@ -32,26 +32,36 @@ class NoCameraFocusTracker:
 
         pygame.mixer.init()
 
-        self.idle_limit = idle_limit
-        self.idle_warning_time = idle_warning_time
+        # Sounds
         self.alert_sound = alert_sound
         self.warning_sound = warning_sound
 
+        # Activity tracking
         self.last_activity_time = time.time()
         self.is_idle = False
-        self.warning_given = False
 
         self.keyboard_listener = None
         self.mouse_listener = None
-
         self.stop_event = threading.Event()
 
-        # 🔑 prevents repeated identical log entries
         self.last_status = None
 
+        # Goal timing
+        self.goal_seconds = int(goal_seconds)
+        self.session_start_time = None
+
+        # 🔑 STAGE MACHINE
+        # 0 = before 50%
+        # 1 = 50% presence asked
+        # 2 = after first refocus / present
+        # 3 = 90% presence asked
+        # 4 = finished (no alerts)
+        self.stage = 0
+
+        self.distraction_given = False
 
     # ---------------------------
-    # Utility: sound
+    # Utilities
     # ---------------------------
     def _play_sound(self, sound_path):
         if not sound_path or not os.path.exists(sound_path):
@@ -61,31 +71,23 @@ class NoCameraFocusTracker:
             try:
                 pygame.mixer.music.load(sound_path)
                 pygame.mixer.music.play()
-            except Exception as e:
-                print(f"(Sound error: {e})")
+            except Exception:
+                pass
 
         threading.Thread(target=_play, daemon=True).start()
 
-
-    # ---------------------------
-    # Utility: notification
-    # ---------------------------
     def _notify(self, title, message, sound=None):
         if self.stop_event.is_set():
             return
 
-        try:
-            if sound:
-                self._play_sound(sound)
+        if sound:
+            self._play_sound(sound)
 
-            notification.notify(
-                title=title,
-                message=message,
-                timeout=3
-            )
-        except Exception as e:
-            print(f"(Notification error: {e})")
-
+        notification.notify(
+            title=title,
+            message=message,
+            timeout=3
+        )
 
     # ---------------------------
     # Activity callback
@@ -96,37 +98,42 @@ class NoCameraFocusTracker:
 
         self.last_activity_time = time.time()
 
+        # Refocus ONLY if distracted stage
         if self.is_idle:
             self._notify("Focus Restored", "Good job! You're back on track.")
             self.is_idle = False
-            self.warning_given = False
+            self.distraction_given = False
+
+            # Move stage forward safely
+            if self.stage == 1:
+                self.stage = 2
+            elif self.stage == 3:
+                self.stage = 4
 
         self._set_status("Focused")
 
-
     # ---------------------------
-    # Safe status updater
+    # Status update
     # ---------------------------
     def _set_status(self, status):
-        status = status.strip().capitalize()  # Focused / Distracted
-
+        status = status.strip().capitalize()
         if status != self.last_status:
             self.session.update_status(status)
             self.last_status = status
 
-
     # ---------------------------
-    # Start session
+    # Start / Stop
     # ---------------------------
     def start(self):
         print("🧠 No-Camera Focus Session Started")
 
         self.session.start()
+        self.session_start_time = time.time()
         self.stop_event.clear()
+
         self.last_activity_time = time.time()
         self.last_status = None
 
-        # Start input listeners
         self.keyboard_listener = keyboard.Listener(on_press=self.on_activity)
         self.mouse_listener = mouse.Listener(
             on_move=self.on_activity,
@@ -138,7 +145,6 @@ class NoCameraFocusTracker:
         self.mouse_listener.start()
 
         try:
-            # 🔑 HEARTBEAT LOOP (THIS CREATES TIMELINE DATA)
             while not self.stop_event.is_set():
                 time.sleep(1)
                 self._update_state()
@@ -147,55 +153,83 @@ class NoCameraFocusTracker:
 
         return self.session.summary()
 
-
-    # ---------------------------
-    # Stop session (called by Flask)
-    # ---------------------------
     def stop(self):
         self.stop_event.set()
         return self.session.summary()
 
-
-    # ---------------------------
-    # Cleanup
-    # ---------------------------
     def _cleanup(self):
-        for listener in [self.keyboard_listener, self.mouse_listener]:
+        for listener in (self.keyboard_listener, self.mouse_listener):
             if listener:
                 listener.stop()
 
         self.session.stop()
         print("✅ No-Camera session ended cleanly")
 
-
     # ---------------------------
-    # Core logic
+    # CORE LOGIC (FINAL & STABLE)
     # ---------------------------
     def _update_state(self):
-        if self.stop_event.is_set():
+        if self.stop_event.is_set() or self.session_start_time is None:
             return
 
-        inactive_for = time.time() - self.last_activity_time
+        now = time.time()
+        elapsed = now - self.session_start_time
+        inactive = now - self.last_activity_time
 
-        if inactive_for > self.idle_limit:
-            if not self.is_idle:
-                self._notify(
-                    "Distraction Alert!",
-                    "You've been idle. Please refocus!",
-                    self.alert_sound
-                )
-                self.is_idle = True
-                self.warning_given = False
-
-            self._set_status("Distracted")
-
-        elif inactive_for > self.idle_warning_time and not self.warning_given:
+        # -------- 50% PRESENCE
+        if self.stage == 0 and elapsed >= self.goal_seconds * 0.5:
             self._notify(
-                "Still focusing?",
-                "Move mouse or press key to stay focused.",
+                "Presence Check",
+                "You're halfway to your goal. Are you still present?",
                 self.warning_sound
             )
-            self.warning_given = True
+            self.stage = 1
+            self.distraction_given = False
+            return
 
-        else:
-            self._set_status("Focused")
+        # -------- MISSED FIRST PRESENCE → ONE DISTRACTION
+        if (
+            self.stage == 1
+            and inactive >= 15
+            and not self.distraction_given
+        ):
+            self._notify(
+                "Distraction Alert!",
+                "You missed the presence check. Please refocus!",
+                self.alert_sound
+            )
+            self._set_status("Distracted")
+            self.is_idle = True
+            self.distraction_given = True
+            return
+
+        # -------- 90% PRESENCE
+        if self.stage == 2 and elapsed >= self.goal_seconds * 0.9:
+            self._notify(
+                "Final Presence Check",
+                "You're almost at your goal. Stay focused!",
+                self.warning_sound
+            )
+            self.stage = 3
+            self.distraction_given = False
+            return
+
+        # -------- MISSED FINAL PRESENCE → ONE FINAL DISTRACTION
+        if (
+            self.stage == 3
+            and inactive >= 15
+            and not self.distraction_given
+        ):
+            self._notify(
+                "Final Distraction Alert!",
+                "You missed the final check. Session marked distracted.",
+                self.alert_sound
+            )
+            self._set_status("Distracted")
+            self.is_idle = True
+            self.distraction_given = True
+            self.stage = 4
+            return
+
+        # -------- NORMAL FOCUS
+        self._set_status("Focused")
