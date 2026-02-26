@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Focus Graph</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e5e7eb;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h2 { text-align: center; }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #020617;
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        a { color: #38bdf8; text-decoration: none; }
+    </style>
+</head>
+
+<body>
+
+<h2>Focus Progress</h2>
+
+<div class="container">
+
+{% if graph_data %}
+    <!-- Inject graph data from Flask -->
+    <script>
+        const GRAPH_DATA = {{ graph_data | tojson | safe }};
+    </script>
+
+    <canvas id="focusChart"></canvas>
+
+    <script>
+        const labels = GRAPH_DATA.x;
+        const values = GRAPH_DATA.y;
+
+        const ctx = document.getElementById("focusChart").getContext("2d");
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Focus Timeline",
+                    data: values,
+                    borderColor: "#38bdf8",
+                    backgroundColor: "rgba(56,189,248,0.2)",
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 1,
+                        ticks: {
+                            callback: v => v === 1 ? "Focused" : "Distracted"
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+{% else %}
+    <p style="text-align:center">No focus data available.</p>
+{% endif %}
+
+</div>
+
+<div class="actions">
+    <a href="/">⬅ Back to Home</a>
+</div>
+
+</body>
+</html>
