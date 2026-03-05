@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Focus Session</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 20px;
+      width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .start-btn {
+      background: #22c55e;
+      color: #020617;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.03);
+    }
+
+    .stop-btn {
+      background: #ef4444;
+      color: white;
+      display: none;
+    }
+
+    video {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .status {
+      margin-top: 10px;
+      display: none;
+      color: #22c55e;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>Focus Session</h2>
+
+  <label>User</label>
+  <input type="text" value="{{ user }}" readonly>
+
+  <label>Activity</label>
+  <input type="text" id="activityField" value="{{ activity }}" readonly>
+
+  <label id ='topicLabel' style ="display:none;"> Study Topic </label>
+  <input type ="text" id ="topicInput" placeholder="Enter Study Topic" stype ='display:none;'>
+
+  <label>Hours</label>
+  <input type="number" id="hours" min="0">
+
+  <label>Minutes</label>
+  <input type="number" id="minutes" min="0" max="59">
+
+  <label>Mode</label>
+  <select id="mode">
+    <option value="nocamera">No Camera</option>
+    <option value="camera">Camera</option>
+  </select>
+
+  <button class="start-btn" onclick="startSession()">Start Session</button>
+  <button class="stop-btn" id="stopBtn" onclick="stopSession()">Stop Session</button>
+
+  <video id="camera" autoplay muted playsinline></video>
+
+  <div class="status" id="statusText">Session Running...</div>
+
+</div>
+
+<script>
+let stream = null;
+let frameInterval = null;
+
+/* ================= CAMERA ================= */
+
+async function startCamera() {
+  const video = document.getElementById("camera");
+  stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
+  video.style.display = "block";
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
+}
+
+function sendFrameToBackend() {
+  const video = document.getElementById("camera");
+  if (!video || video.videoWidth === 0) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+
+  fetch("/frame", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      frame: canvas.toDataURL("image/jpeg")
+    })
+  });
+}
+
+function startSendingFrames() {
+  frameInterval = setInterval(sendFrameToBackend, 1000);
+}
+
+function stopSendingFrames() {
+  if (frameInterval) clearInterval(frameInterval);
+}
+
+/* ================= PLATFORM OPEN ================= */
+
+function openPlatform(activity,topic) {
+  if (!activity) return;
+
+  const map = {
+    leetcode: "https://leetcode.com",
+    hackerrank: "https://hackerrank.com",
+    gfg: "https://geeksforgeeks.org",
+    onecompiler: "https://onecompiler.com",
+    github: "https://github.com",
+    kaggle: "https://kaggle.com",
+    greatlearning: "https://www.mygreatlearning.com",
+    spoken: "https://spoken-tutorial.org",
+    ibm:"https://skillsbuild.org",
+    youtube_study:"https://www.youtube.com"
+  };
+  if(activity==="youtube_study"){
+    if(!topic){
+      alert("Please enter a study topic for Youtube.");
+      return;
+    }
+    const query=topic.trim().replaceAll(" ","+");
+    window.open("https://www.youtube.com/results?search_query=" + query,"_blank");
+    return;
+  }
+
+  if (map[activity]) {
+    window.open(map[activity], "_blank");
+  } else if (activity === "vscode") {
+    alert("Open VS Code manually on your system.");
+  } else if (activity === "devcpp") {
+    alert("Open Dev C++ manually on your system.");
+  }
+}
+
+/* ================= SESSION CONTROL ================= */
+
+function startSession() {
+
+  const h = parseInt(document.getElementById("hours").value) || 0;
+  const m = parseInt(document.getElementById("minutes").value) || 0;
+  const totalGoalSeconds = (h * 3600) + (m * 60);
+
+  const mode = document.getElementById("mode").value;
+  const activity = document.getElementById("activityField").value;
+  const topic=document.getElementById("topicInput").value;
+
+  // 🔥 FIRST start backend
+  fetch("/start", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      goal_seconds: totalGoalSeconds,
+      mode: mode,
+      activity: activity,
+      topic:topic
+    })
+  })
+  .then(res => res.json())
+  .then(() => {
+
+    // 🔥 THEN start camera if needed
+    if (mode === "camera") {
+      startCamera();
+      startSendingFrames();
+    }
+
+    openPlatform(activity,topic);
+
+    document.getElementById("stopBtn").style.display = "block";
+    document.getElementById("statusText").style.display = "block";
+
+  });
+}
+
+function stopSession() {
+
+  stopSendingFrames();
+  stopCamera();
+
+  fetch("/stop", { method: "POST" })
+    .then(() => window.location.href = "/result");
+}
+</script>
+<script>
+let pollingInterval = null;
+let sessionEnded = false;
+
+function startLiveMonitoring() {
+
+    pollingInterval = setInterval(() => {
+
+        if (sessionEnded) {
+            clearInterval(pollingInterval);
+            return;
+        }
+
+        fetch("/live-stats")
+            .then(res => res.json())
+            .then(data => {
+
+                // If no active session, ignore
+                if (!data || data.status === "no_session") {
+                    return;
+                }
+
+                // Redirect only ONCE
+                if (data.auto_stopped === true && !sessionEnded) {
+                    sessionEnded = true;
+                    clearInterval(pollingInterval);
+                    alert("⚠ Session Auto-Stopped Due To Continuous Distraction!");
+                    fetch('/stop',{method:"POST"}).then(()=>{
+                      window.location.href = "/result";
+                    });  
+                }
+
+            })
+            .catch(err => console.log("Live check error:", err));
+
+    }, 1000);
+}
+
+// Start monitoring only after page loads
+window.addEventListener("load", startLiveMonitoring);
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const activity = document.getElementById("activityField").value;
+
+    if (activity === "youtube_study") {
+        document.getElementById("topicLabel").style.display = "block";
+        document.getElementById("topicInput").style.display = "block";
+    }
+
+});
+</script>
+</body>
+</html>

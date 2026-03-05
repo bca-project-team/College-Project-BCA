@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #e5e7eb;
+      padding: 40px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+      background: rgba(255,255,255,0.06);
+      padding: 25px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      font-size: 20px;
+      color: #22c55e;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      color: #22c55e;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: #3b82f6;
+      color: white;
+      margin-top: 20px;
+    }
+    canvas {
+      margin-top: 15px;
+    }
+    .heatmap{
+display:grid;
+grid-template-columns:repeat(7,14px);
+gap:4px;
+margin-top:10px;
+}
+
+.cell{
+width:14px;
+height:14px;
+border-radius:3px;
+}
+
+.level-0{background:#161b22;}
+.level-1{background:#0e4429;}
+.level-2{background:#006d32;}
+.level-3{background:#26a641;}
+  </style>
+</head>
+
+<body>
+
+<h1>📊 Analytics Dashboard</h1>
+
+<!-- Focus Graph -->
+<div class="section">
+  <h2>Focus Timeline</h2>
+  <canvas id="focusChart"></canvas>
+</div>
+
+<!-- Weekly Report -->
+<div class="section">
+  <h2>Weekly Report</h2>
+  <p><strong>Total Focus :</strong> {{ weekly.total_focus }}</p>
+  <p><strong>Average Daily :</strong> {{ weekly.average_daily }}</p>
+  <p><strong>Days Tracked:</strong> {{ weekly.days_tracked }}</p>
+  <p><strong>Sessions Tracked:</strong> {{ weekly.sessions_tracked }}</p>
+  <p><strong>Goal Achieved Days:</strong> {{ weekly.goal_days }}</p>
+  <p><strong>Best Day:</strong> {{ weekly.best_day }}</p>
+  <p><strong>Worst Day:</strong> {{ weekly.worst_day }}</p>
+</div>
+
+<!-- Monthly Report -->
+<div class="section">
+  <h2>Monthly Report</h2>
+  <p><strong>Total Focus :</strong> {{ monthly.total_focus }}</p>
+  <p><strong>Average Daily :</strong> {{ monthly.average_daily }}</p>
+  <p><strong>Days Tracked:</strong> {{ monthly.days_tracked }}</p>
+  <p><strong>Sessions Tracked:</strong> {{ monthly.sessions_tracked }}</p>
+  <p><strong>Goal Achieved Days:</strong> {{ monthly.goal_days }}</p>
+  <p><strong>Best Day:</strong> {{ monthly.best_day }}</p>
+  <p><strong>Worst Day:</strong> {{ monthly.worst_day }}</p>
+</div>
+<div class="section">
+  <h2>Focus Consistency-{{current_month}} </h2>
+<div class="heatmap">
+{% for day in heatmap %}
+<div class="cell level-{{ day.level }}"title='{{day.date}}'></div>
+{% endfor %}
+</div>
+</div>
+
+
+<!-- Session History -->
+<div class="section">
+  <h2>Session History</h2>
+
+  {% if records %}
+  <table>
+    <tr>
+      <th>Date</th>
+      <th>Activity</th>
+      <th>Focused Minutes</th>
+      <th>Focus Score</th>
+      <th>Goal Achieved</th>
+    </tr>
+
+    {% for r in records %}
+    <tr>
+      <td>{{ r.timestamp }}</td>
+      <td>{{ r.activity if r.activity is defined else "general" }}</td>
+      <td>{{ (r.focused_seconds / 60) | round(2) }}</td>
+      <td>{{ r.focus_score }}</td>
+      <td>{{ r.goal_achieved }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No sessions recorded yet.</p>
+  {% endif %}
+</div>
+
+<button class="btn" onclick="window.location.href='/hub'">
+  ← Back to Hub
+</button>
+
+<script>
+  const graphData = JSON.parse('{{ graph_data | tojson | safe }}');
+
+  const ctx = document.getElementById('focusChart').getContext('2d');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: graphData.labels,
+      datasets: [{
+        label: 'Focused Minutes',
+        data: graphData.values,
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.15)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#22c55e'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#e5e7eb'
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#cbd5e1'
+          },
+          grid: {
+            color: 'rgba(255,255,255,0.05)'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#cbd5e1'
+          },
+          grid: {
+            color: 'rgba(255,255,255,0.05)'
+          }
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

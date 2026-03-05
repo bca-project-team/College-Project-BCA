@@ -1,0 +1,15 @@
+flask
+pandas
+plotly
+requests
+numpy 
+seaborn
+matplotlib
+opencv-python
+mediapipe
+scikit-learn
+flask
+pynput
+pygame
+pyler
+pygetwindow

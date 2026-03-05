@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account • SmartFocus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e5e7eb;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: #020617;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #cbd5f5;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #e5e7eb;
+            outline: none;
+            transition: 0.2s ease;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h2>Create Your Account</h2>
+    <div class="subtitle">Start optimizing your focus today</div>
+
+    <form method="POST">
+
+        <label>Username</label>
+        <input type="text" name="user" required>
+
+        <label>Email (optional)</label>
+        <input type="email" name="email">
+
+        <label>Password</label>
+        <input type="password" name="password"required>
+
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password" required>
+
+
+
+        <button type="submit">Create Account</button>
+
+    </form>
+
+    <div class="footer">
+        Already have an account?
+        <a href="/login">Login</a>
+    </div>
+
+</div>
+
+</body>
+</html>
