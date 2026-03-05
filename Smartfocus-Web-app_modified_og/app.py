@@ -318,7 +318,7 @@ def result():
         result_data=tracker.last_summary
     if result_data and result_data.get('auto_stopped'):
         alert_message="Session Auto-stopped Due to Continuous Distraction. Goal Not Achieved!!"
-    return render_template("result.html", result=session_result,alert_message=alert_message)
+    return render_template("result.html", result=session_result,alert_message=alert_message,format_time=format_time)
 
 # ---------------------------
 # GRAPH

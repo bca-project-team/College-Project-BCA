@@ -125,12 +125,12 @@
 
         <div class="row">
             <span class="label">Focused Time</span>
-            <span class="value">{{ result["focused_seconds"] }} sec</span>
+            <span class="value">{{ format_time(result["focused_seconds"] )}}</span>
         </div>
 
         <div class="row">
             <span class="label">Distracted Time</span>
-            <span class="value">{{ result["distracted_seconds"] }} sec</span>
+            <span class="value">{{format_time( result["distracted_seconds"] )}}</span>
         </div>
 
         <div class="row">

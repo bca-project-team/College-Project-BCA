@@ -1,223 +1,288 @@
 # SmartFocus – AI Assisted Study Focus Monitoring System
 
-SmartFocus is a real-time study focus monitoring system developed as a Final Year Major Project for the Bachelor of Computer Applications (BCA) program under the NEP curriculum.
+SmartFocus is an **AI-assisted study focus monitoring system** developed as a **Final Year Major Project** for the **Bachelor of Computer Applications (BCA)** program under the **NEP curriculum**.
 
-The system is designed to help students maintain concentration, track focus behavior, and reduce distractions during study sessions using both camera-based and non-camera-based monitoring techniques.
+The system helps students maintain concentration during study sessions by **monitoring focus behavior in real time**, detecting distractions, and generating analytical reports that help users understand and improve their study habits.
 
----
-
-## Academic Details
-
-Program: Bachelor of Computer Applications (BCA)  
-Project Type: Final Year Major Project  
-Institution: Institute of Technology and Management  
-Department: Information Technology  
+SmartFocus supports **both camera-based and non-camera-based monitoring**, making it flexible, privacy-friendly, and suitable for different learning environments.
 
 ---
 
-## Team Members
+# Academic Information
 
-- Srijan Poudel  
-- Robin Singh Rana  
-- Priyanshu  
-- Priyanshu T. Negi  
-
----
-
-## Problem Statement
-
-Students often struggle to maintain sustained focus while studying due to distractions such as mobile phones, multitasking, and lack of supervision.
-
-Most traditional productivity tools only track time and do not actively monitor user presence or provide real-time feedback.
-
-SmartFocus addresses this problem by:
-- Actively monitoring user activity
-- Detecting inactivity and absence
-- Providing intelligent presence checks and distraction alerts
-- Generating performance reports for self-analysis and parental review
+**Program:** Bachelor of Computer Applications (BCA)  
+**Project Type:** Final Year Major Project  
+**Institution:** Institute of Technology and Management  
+**Department:** Information Technology  
 
 ---
 
-## Objectives
+# Team Members
 
-- To monitor and analyze student focus behavior in real time  
-- To support both camera-based and non-camera focus tracking  
-- To provide goal-oriented presence and distraction alerts  
-- To generate weekly and monthly focus reports  
-- To notify parents about student focus performance  
+- **Srijan Poudel**
+- **Robin Singh Rana**
+- **Priyanshu**
+- **Priyanshu T. Negi**
 
 ---
 
-## Key Features
+# Problem Statement
 
-### User Management
+Students frequently struggle to maintain sustained concentration while studying due to distractions such as:
+
+- Social media
+- Multitasking
+- Mobile phone usage
+- Lack of supervision
+
+Most productivity tools only track time and **do not verify whether the user is actually focused**.
+
+SmartFocus addresses this issue by providing:
+
+- Real-time focus monitoring
+- Presence verification
+- Distraction detection
+- Intelligent alert mechanisms
+- Detailed focus analytics
+
+This enables students, teachers, and parents to **better understand study behavior and productivity patterns**.
+
+---
+
+# Target Users
+
+SmartFocus is designed primarily for **students and learners who are actively building technical skills through focused practice**.
+
+Typical users include:
+
+- Programming and software development learners
+- Students preparing for coding interviews
+- Data science and machine learning learners
+- Competitive programming practitioners
+- Online course learners
+
+These users often spend long hours practicing on platforms such as:
+
+- LeetCode
+- HackerRank
+- GeeksforGeeks
+- Kaggle
+- GitHub
+- Online learning platforms
+
+SmartFocus helps them maintain discipline by monitoring focus during practice sessions and preventing distractions such as social media or unrelated browsing.
+
+---
+
+# Project Objectives
+
+The primary objectives of SmartFocus are:
+
+- To monitor and analyze student focus behavior in real time
+- To support both **camera-based** and **activity-based** focus tracking
+- To implement goal-based presence and distraction alerts
+- To generate analytical reports for productivity insights
+- To assist students and educators in improving study discipline
+
+---
+
+# Key Features
+
+## User Management
 - Student registration system
-- Secure login and logout
-- Parent details linked with student accounts
+- Secure login and authentication
+- Session history tracking
 
 ---
 
-## Focus Tracking Modes
+# Focus Tracking Modes
 
-### Camera Mode
-- Live webcam feed
-- Frame-by-frame focus analysis
-- Real-time processing via backend
+## Camera Mode
 
-### No-Camera Mode
-- Keyboard and mouse activity tracking
-- Detects inactivity and distraction
-- Lightweight and privacy-friendly
+Camera-based monitoring uses computer vision to determine whether the user is attentive.
 
----
+Features:
 
-## Goal Based Focus System
-
-- User sets goal time in hours and minutes
-- Focus tracking adapts dynamically to goal duration
-- Intelligent alert system based on progress
-
-### Intelligent Alerts
-
-#### Presence Check Alert
-- Triggered once at 50% of the goal time
-- Verifies whether the user is still actively present
-
-#### Distraction Alert
-- Triggered only if the user remains inactive after the presence check
-- Prevents unnecessary alerts
-
-#### Focus Restored Notification
-- Displayed once the user resumes activity
-- Clears distraction state automatically
-
-The alert logic is carefully designed to avoid notification spam and simulate real-world human supervision.
+- Live webcam feed processing
+- Face detection and tracking
+- Eye and head movement monitoring
+- Real-time focus status detection
 
 ---
 
-## Reports and Analytics
+## No-Camera Mode
+
+A lightweight and privacy-friendly tracking system.
+
+Features:
+
+- Keyboard activity tracking
+- Mouse activity tracking
+- Idle detection
+- Presence verification
+
+This mode ensures focus monitoring without requiring a webcam.
+
+---
+
+# Goal-Based Focus System
+
+Users define a study goal before starting a session.
+
+Example:
+
+```
+Goal Time: 1 Hour
+```
+
+SmartFocus dynamically adapts its monitoring logic based on the selected goal duration.
+
+---
+
+# Intelligent Alert System
+
+## Presence Check Alert
+
+Triggered when **50% of the goal duration is completed**.
+
+Purpose:
+- Verify that the student is still present and engaged in the study session.
+
+---
+
+## Distraction Alert
+
+Triggered only if:
+
+- The user ignores the presence check
+- The system detects prolonged inactivity
+
+This prevents unnecessary interruptions and ensures alerts occur only when required.
+
+---
+
+## Focus Restored Notification
+
+Triggered when the user resumes activity.
+
+The system automatically:
+
+- Clears distraction state
+- Resumes focus tracking
+- Prevents repeated alerts
+
+---
+
+# Reports and Analytics
+
+SmartFocus generates detailed productivity reports including:
 
 - Session-wise focus logs
-- Weekly focus summary
-- Monthly performance report
-- Visual graphs representing focus trends
+- Weekly focus summaries
+- Monthly performance analysis
+- Focus consistency heatmap
+- Visual graphs representing study trends
+
+These analytics help users identify patterns and improve study discipline.
 
 ---
 
-## Parent Notification System
+# System Workflow
 
-- Weekly focus report sent to parent via email
-- Report includes:
-  - Total focus time
-  - Average daily focus
-  - Goal achievement statistics
-
----
-
-## System Workflow
-
-User Registration  
-↓  
-User Login  
-↓  
-Dashboard  
-↓  
-Set Goal Time (Hours and Minutes)  
-↓  
-Select Mode (Camera or No-Camera)  
-↓  
-Focus Tracking Begins  
-↓  
-Presence Check at 50% of Goal  
-↓  
-If Absent → Distraction Alert  
-↓  
-If Refocused → Continue Session  
-↓  
-Session Ends  
-↓  
-Reports Generated  
-↓  
-Parent Email Notification  
+1. User Registration  
+2. User Login  
+3. Dashboard Access  
+4. Set Study Goal  
+5. Select Focus Mode (Camera / No-Camera)  
+6. Start Focus Session  
+7. Presence Check at 50% of Goal  
+8. Distraction Alert if Inactive  
+9. Focus Restored → Continue Session  
+10. Session Ends  
+11. Focus Analytics Generated  
 
 ---
 
-## Focus and Alert Logic (Core Concept)
+# Technology Stack
 
-### Presence Check Logic
-- Triggered once at 50% of the goal duration
-- Checks whether the user is still actively interacting
-
-### Distraction Detection
-Activated only when:
-- User ignores the presence check
-- User remains inactive beyond the defined threshold
-
-Internal state flags prevent repeated alerts.
-
-### Focus Restoration
-- Triggered on keyboard or mouse activity
-- Distraction state is cleared
-- Focus resumes normally
-- No repeated alerts until the next checkpoint
-
-This logic closely simulates real-world human supervision.
-
----
-
-## Technology Stack
-
-### Backend
+## Backend
 - Python
 - Flask
 
-### Frontend
+## Frontend
 - HTML
 - CSS
 - JavaScript
 
-### Focus Tracking
+## Focus Tracking
 - OpenCV
+- Mediapipe
 - pynput
 
-### Data Storage
-- CSV files
+## Data Storage
+- CSV based logging system
 
-### Visualization
+## Visualization
 - Matplotlib
 
-### Notifications
+## Notifications
 - Plyer
 
-### Audio Alerts
+## Audio Alerts
 - Pygame
 
 ---
 
-## How to Run the Project
+# Installation Guide
 
-### Step 1: Create Virtual Environment
+## 1️⃣ Create Virtual Environment
+
+```
 python -m venv venv
-### Step 2: Activate Environment
+```
+
+## 2️⃣ Activate Environment
+
+Windows:
+
+```
 venv\Scripts\activate
-### Step 3: Install Dependencies
+```
+
+## 3️⃣ Install Dependencies
+
+```
 pip install -r requirements.txt
-### Step 4: Run the Application
+```
+
+## 4️⃣ Run the Application
+
+```
 python app.py
-### Step 5: Open in Browser
+```
+
+## 5️⃣ Open in Browser
+
+```
 http://127.0.0.1:5000
+```
 
 ---
 
 # Future Enhancements
-- Machine learning based attention scoring
+
+Potential improvements include:
+
+- Machine learning based attention prediction
 - Mobile application version
 - Cloud database integration
-- Real-time parent dashboard
-- Emotion and eye-movement detection
+- Real-time parental dashboard
+- Emotion detection and fatigue monitoring
 
 ---
 
 # Conclusion
-SmartFocus is a practical, scalable, and academically sound solution to modern study-related distraction problems.
-The project successfully demonstrates the integration of real-time monitoring, user interaction tracking, and data-driven analytics into a unified system suitable for academic and real-world use
+
+SmartFocus demonstrates how **real-time monitoring, computer vision, and behavioral analytics** can be integrated to address modern study distraction challenges.
+
+The system provides a scalable and practical solution that promotes disciplined study habits while giving students meaningful insights into their productivity and focus patterns.
