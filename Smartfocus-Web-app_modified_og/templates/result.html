@@ -87,6 +87,12 @@
             font-size: 12px;
             color: #6b7280;
         }
+        .score-label{
+            text-align:center;
+            font-size:14px;
+            margin-top:-8px;
+            color:#9ca3af;
+}
     </style>
 </head>
 
@@ -147,6 +153,7 @@
         <div class="score">
             {{ result.focus_score | default(0) }}/100
         </div>
+        <p class="score-label">{{ score_label }}</p>
 
     {% else %}
         <p style="text-align:center;color:#9ca3af;">
@@ -155,9 +162,6 @@
     {% endif %}
 
     <div class="actions">
-        <a class="btn btn-primary" href="/graph?user={{ result['user'] | lower | trim if result }}">
-            View Focus Graph
-        </a>
         <a class="btn btn-secondary" href="/history">View Session History</a>
         <a class="btn btn-secondary" href="/">Back to Home</a>
     </div>

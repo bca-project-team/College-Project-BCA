@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>Activity Sessions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:#e5e7eb;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+
+.container{
+width:92%;
+max-width:1100px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(12px);
+padding:35px;
+border-radius:18px;
+box-shadow:0 20px 45px rgba(0,0,0,0.6);
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+font-weight:700;
+}
+
+.filters{
+text-align:center;
+margin-bottom:20px;
+}
+
+.filters a{
+text-decoration:none;
+color:white;
+padding:8px 14px;
+margin:5px;
+border-radius:8px;
+background:#1f2937;
+font-size:14px;
+transition:0.2s;
+}
+
+.filters a:hover{
+background:#3b82f6;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:12px;
+text-align:center;
+}
+
+th{
+background:#111827;
+font-size:14px;
+}
+
+tr:nth-child(even){
+background:#1f2937;
+}
+
+tr:nth-child(odd){
+background:#020617;
+}
+
+.score{
+font-weight:700;
+color:#22c55e;
+}
+
+.badge{
+padding:4px 10px;
+border-radius:12px;
+font-size:12px;
+font-weight:600;
+}
+
+.success{
+background:#16a34a;
+}
+
+.fail{
+background:#dc2626;
+}
+
+.back{
+display:block;
+text-align:center;
+margin-top:25px;
+text-decoration:none;
+color:white;
+padding:12px;
+background:#3b82f6;
+border-radius:8px;
+font-weight:600;
+}
+
+.back:hover{
+background:#2563eb;
+}
+
+.empty{
+text-align:center;
+margin-top:20px;
+color:#9ca3af;
+font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Activity Sessions</h2>
+
+<div class="filters">
+
+<a href="/activity">All</a>
+
+{% for a in activities %}
+
+<a href="/activity?activity={{ a }}">
+{{ a.capitalize() }}
+</a>
+
+{% endfor %}
+
+</div>
+
+{% if sessions %}
+
+<table>
+
+<tr>
+<th>Date</th>
+<th>Activity</th>
+<th>Mode</th>
+<th>Focused Time</th>
+<th>Distracted Time</th>
+<th>Focus Score</th>
+<th>Goal</th>
+</tr>
+
+{% for s in sessions %}
+
+<tr>
+
+<td>{{ s.timestamp }}</td>
+
+<td>{{ s.activity }}</td>
+
+<td>{{ s.mode }}</td>
+
+<td>
+
+{% set sec = s.focused_seconds %}
+{% if sec >= 3600 %}
+{{ (sec//3600) }}h {{ ((sec%3600)//60) }}m
+{% elif sec >= 60 %}
+{{ (sec//60) }}m {{ (sec%60) }}s
+{% else %}
+{{ sec }}s
+{% endif %}
+
+</td>
+
+<td>
+
+{% set sec = s.distracted_seconds %}
+{% if sec >= 3600 %}
+{{ (sec//3600) }}h {{ ((sec%3600)//60) }}m
+{% elif sec >= 60 %}
+{{ (sec//60) }}m {{ (sec%60) }}s
+{% else %}
+{{ sec }}s
+{% endif %}
+
+</td>
+
+<td class="score">{{ s.focus_score }}</td>
+
+<td>
+
+{% if s.goal_achieved %}
+<span class="badge success">Achieved</span>
+{% else %}
+<span class="badge fail">Missed</span>
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<div class="empty">
+No sessions found for this activity.
+</div>
+
+{% endif %}
+
+<a class="back" href="/hub">Back to Dashboard</a>
+
+</div>
+
+</body>
+</html>

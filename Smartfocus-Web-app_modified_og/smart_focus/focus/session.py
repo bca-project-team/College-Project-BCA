@@ -107,10 +107,15 @@ class FocusSession:
     # Calculate focus score
     # -----------------------
     def calculate_score(self):
-        total = self.focused_seconds + self.distracted_seconds
-        if total == 0:
+        total_session=self.focused_seconds + self.distracted_seconds
+        if total_session==0:
             return 0
-        return int((self.focused_seconds / total) * 100)
+        goal_seconds = self.goal_hours*3600
+        
+        focus_ratio=self.focused_seconds/total_session
+        goal_ratio=self.focused_seconds/goal_seconds
+        score=(focus_ratio*goal_ratio)*100
+        return min(int(score),100)
 
     # -----------------------
     # Stop session

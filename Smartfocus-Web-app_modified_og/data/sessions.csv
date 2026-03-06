@@ -35,3 +35,8 @@ timestamp,user,mode,activity,goal_hours,focused_seconds,distracted_seconds,focus
 2026-03-05 10:08:51,heysiri,no_camera,youtube_study,0.06666666666666667,141,4,2,97,False,145
 2026-03-05 12:46:43,heysiri,no_camera,leetcode,0.03333333333333333,7,0,0,91,False,8
 2026-03-05 12:57:43,heysiri,no_camera,onecompiler,0.05,128,2,2,98,False,130
+2026-03-06 14:54:11,heysiri,no_camera,leetcode,0.03333333333333333,20,1,0,93,False,21
+2026-03-06 20:02:23,heysiri,no_camera,leetcode,0.03333333333333333,6,1,0,82,False,7
+2026-03-06 20:37:27,heysiri,no_camera,leetcode,0.03333333333333333,17,0,0,14,False,18
+2026-03-06 20:42:32,heysiri,no_camera,leetcode,0.03333333333333333,30,0,0,24,False,31
+2026-03-06 20:43:41,heysiri,no_camera,leetcode,0.03333333333333333,15,38,0,3,False,54

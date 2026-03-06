@@ -16,6 +16,7 @@ from smart_focus.analytics.graphs import build_focus_graph
 from smart_focus.analytics.reports import get_weekly_report, get_monthly_report
 from smart_focus.utils.distraction_detector import DistractionDetector
 from smart_focus.analytics.reports import get_focus_heatmap
+from smart_focus.database.db import init_db, get_connection
 
 def format_time(seconds):
     seconds=int(seconds)
@@ -27,6 +28,17 @@ def format_time(seconds):
     if minutes:
         return f'{minutes} min {secs} sec'
     return f'{secs} sec'
+
+def get_focus_label(score):
+
+    if score < 40:
+        return "Poor Discipline"
+    elif score < 70:
+        return "Moderate Focus"
+    elif score < 90:
+        return "Good Productivity"
+    else:
+        return "Excellent Focus"
  
 # ---------------------------
 # App setup
@@ -312,13 +324,21 @@ def result():
     global tracker,session_result
     result_data=None
     alert_message=None
+    
     if session_result:
         result_data=session_result
     elif tracker and hasattr(tracker,"last_summary"):
         result_data=tracker.last_summary
+    score_label=None
+    if result_data:
+        score_label=get_focus_label(result_data['focus_score'])
     if result_data and result_data.get('auto_stopped'):
         alert_message="Session Auto-stopped Due to Continuous Distraction. Goal Not Achieved!!"
-    return render_template("result.html", result=session_result,alert_message=alert_message,format_time=format_time)
+    return render_template("result.html",
+                            result=session_result,
+                            score_label=score_label,
+                            alert_message=alert_message,
+                            format_time=format_time)
 
 # ---------------------------
 # GRAPH
@@ -451,6 +471,88 @@ def delete_note(note_id):
         json.dump(notes, f, indent=4)
 
     return jsonify({"status": "deleted"})
+
+@app.route("/activity")
+def activity():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    import sqlite3
+
+    conn = sqlite3.connect("data/smartfocus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    activity = request.args.get("activity")
+
+    cur.execute("""
+    SELECT DISTINCT activity
+    FROM sessions
+    WHERE user=?
+    """,(session["user"],))
+
+    activities = [row["activity"] for row in cur.fetchall()]
+
+    if activity:
+        cur.execute("""
+        SELECT *
+        FROM sessions
+        WHERE user=? AND activity=?
+        ORDER BY timestamp DESC
+        """,(session["user"],activity))
+    else:
+        cur.execute("""
+        SELECT *
+        FROM sessions
+        WHERE user=?
+        ORDER BY timestamp DESC
+        """,(session["user"],))
+
+    sessions = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "activity.html",
+        sessions=sessions,
+        activities=activities
+    )
+
+@app.route("/platform-analytics")
+def platform_analytics():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    import sqlite3
+    import pandas as pd
+
+    conn = sqlite3.connect("data/smartfocus.db")
+
+    df = pd.read_sql_query(
+        "SELECT * FROM sessions WHERE user=?",
+        conn,
+        params=(session["user"],)
+    )
+
+    conn.close()
+
+    if df.empty:
+        return render_template("platform.html", data=None)
+
+    df["focused_minutes"] = df["focused_seconds"] / 60
+
+    result = df.groupby("activity").agg(
+        sessions=("activity","count"),
+        total_focus=("focused_minutes","sum"),
+        avg_score=("focus_score","mean")
+    ).reset_index()
+
+    return render_template(
+        "platform.html",
+        data=result.to_dict(orient="records")
+    )
 
 # ---------------------------
 # RUN

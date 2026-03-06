@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>Platform Productivity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:#e5e7eb;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+
+.container{
+width:90%;
+max-width:900px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(10px);
+padding:35px;
+border-radius:18px;
+box-shadow:0 20px 45px rgba(0,0,0,0.6);
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+font-weight:700;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:12px;
+text-align:center;
+}
+
+th{
+background:#111827;
+font-size:14px;
+}
+
+tr:nth-child(even){
+background:#1f2937;
+}
+
+tr:nth-child(odd){
+background:#020617;
+}
+
+.platform{
+font-weight:600;
+}
+
+.score{
+font-weight:700;
+color:#22c55e;
+}
+
+.sessions{
+color:#93c5fd;
+}
+
+.focus{
+color:#facc15;
+}
+
+.back{
+display:block;
+text-align:center;
+margin-top:25px;
+text-decoration:none;
+color:white;
+padding:12px;
+background:#3b82f6;
+border-radius:8px;
+font-weight:600;
+}
+
+.back:hover{
+background:#2563eb;
+}
+
+.empty{
+text-align:center;
+color:#9ca3af;
+margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Platform Productivity</h2>
+
+{% if data %}
+
+<table>
+
+<tr>
+<th>Platform</th>
+<th>Sessions</th>
+<th>Total Focus</th>
+<th>Avg Score</th>
+</tr>
+
+{% for p in data %}
+
+<tr>
+
+<td class="platform">{{ p.activity }}</td>
+
+<td class="sessions">{{ p.sessions }}</td>
+
+<td class="focus">{{ p.total_focus|round(1) }} min</td>
+
+<td class="score">{{ p.avg_score|round(1) }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<div class="empty">
+No platform data available yet.
+</div>
+
+{% endif %}
+
+<a class="back" href="/analytics">Back to Analytics</a>
+
+</div>
+
+</body>
+</html>

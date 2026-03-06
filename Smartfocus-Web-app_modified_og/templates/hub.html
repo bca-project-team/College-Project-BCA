@@ -133,6 +133,27 @@
   padding: 15px;
   border-radius: 15px;
 }
+.analytics-links{
+margin-top:20px;
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+}
+
+.hub-btn{
+padding:12px 18px;
+background:#00c9a7;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:600;
+transition:0.2s;
+}
+
+.hub-btn:hover{
+background:#009f86;
+transform:translateY(-2px);
+}
   </style>
 </head>
 
@@ -227,6 +248,17 @@
       View Analytics Dashboard
     </div>
   </div>
+</div>
+<div class="analytics-links">
+
+    <a href="/activity" class="hub-btn">
+        📊 View Activity Sessions
+    </a>
+
+    <a href="/platform-analytics" class="hub-btn">
+        🧠 Platform Productivity
+    </a>
+
 </div>
 <div class="section">
   <h2>📝 Notes</h2>
