@@ -189,10 +189,6 @@ function openPlatform(activity,topic) {
     youtube_study:"https://www.youtube.com"
   };
   if(activity==="youtube_study"){
-    if(!topic){
-      alert("Please enter a study topic for Youtube.");
-      return;
-    }
     const query=topic.trim().replaceAll(" ","+");
     window.open("https://www.youtube.com/results?search_query=" + query,"_blank");
     return;
@@ -218,6 +214,11 @@ function startSession() {
   const mode = document.getElementById("mode").value;
   const activity = document.getElementById("activityField").value;
   const topic=document.getElementById("topicInput").value;
+  if (activity==='youtube_study'&& topic===''){
+      alert("Please enter a study topic for Youtube.");
+      return;
+    
+  }
 
   // 🔥 FIRST start backend
   fetch("/start", {
