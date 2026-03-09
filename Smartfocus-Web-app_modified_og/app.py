@@ -480,7 +480,7 @@ def activity():
 
     import sqlite3
 
-    conn = sqlite3.connect("data/smartfocus.db")
+    conn = sqlite3.connect(os.path.join(DATA_DIR,"smartfocus.db"))
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
@@ -528,7 +528,7 @@ def platform_analytics():
     import sqlite3
     import pandas as pd
 
-    conn = sqlite3.connect("data/smartfocus.db")
+    conn = sqlite3.connect(os.path.join(DATA_DIR,"smartfocus.db"))
 
     df = pd.read_sql_query(
         "SELECT * FROM sessions WHERE user=?",
