@@ -42,3 +42,7 @@ timestamp,user,mode,activity,goal_hours,focused_seconds,distracted_seconds,focus
 2026-03-06 20:43:41,heysiri,no_camera,leetcode,0.03333333333333333,15,38,0,3,False,54
 2026-03-06 21:03:02,heysiri,no_camera,ibm,0.03333333333333333,11,2,0,8,False,13
 2026-03-09 20:37:10,heysiri,no_camera,youtube_study,0.03333333333333333,62,1,1,50,False,63
+2026-03-10 10:10:28,heysiri,no_camera,leetcode,0.05,19,0,0,10,False,20
+2026-03-10 10:12:34,heysiri,camera,kaggle,0.03333333333333333,4,18,0,0,False,22
+2026-03-10 10:20:33,heysiri,no_camera,hackerrank,0.03333333333333333,9,0,0,6,False,10
+2026-03-10 10:21:26,heysiri,camera,hackerrank,0.03333333333333333,19,11,0,10,False,30

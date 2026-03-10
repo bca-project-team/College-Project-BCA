@@ -117,7 +117,7 @@
     <option value="camera">Camera</option>
   </select>
 
-  <button class="start-btn" onclick="startSession()">Start Session</button>
+  <button id ='startBtn' class="start-btn" onclick="startSession()">Start Session</button>
   <button class="stop-btn" id="stopBtn" onclick="stopSession()">Stop Session</button>
 
   <video id="camera" autoplay muted playsinline></video>
@@ -242,6 +242,7 @@ function startSession() {
 
     openPlatform(activity,topic);
 
+    document.getElementById("startBtn").style.display = "none";
     document.getElementById("stopBtn").style.display = "block";
     document.getElementById("statusText").style.display = "block";
 
