@@ -86,15 +86,17 @@ class DistractionDetector:
                 # ==================================================
                 if distracted:
                     self.distraction_time += 2
-                    self.tracker.session.update_status("Distracted")
+                    self.tracker.content_distracted=True
                 else:
                     self.distraction_time = 0
-                    self.tracker.session.update_status("Focused")
+                    self.tracker.content_distracted=False
 
                 # ==================================================
                 # 🚨 AUTO STOP SESSION
                 # ==================================================
                 if self.distraction_time >= DISTRACTION_THRESHOLD and not getattr(self.tracker,"auto_stopped",False):
+                    if hasattr(self.tracker,"_play_sound"):
+                        self.tracker._play_sound("static/alert2.wav")
                     print("⚠ Auto-stopping session due to distraction")
 
                     self.tracker.auto_stopped = True

@@ -68,20 +68,23 @@ class NoCameraFocusTracker:
         self.stage = 0
 
         self.distraction_given = False
+        self.content_distracted=False
+        self.alert_message=None
 
     # ---------------------------
     # Utilities
     # ---------------------------
     def _play_sound(self, sound_path):
         if not sound_path or not os.path.exists(sound_path):
+            print('sound file missing')
             return
 
         def _play():
             try:
                 pygame.mixer.music.load(sound_path)
                 pygame.mixer.music.play()
-            except Exception:
-                pass
+            except Exception as e:
+                print("sound error: ",e)
 
         threading.Thread(target=_play, daemon=True).start()
 
@@ -97,6 +100,10 @@ class NoCameraFocusTracker:
             message=message,
             timeout=3
         )
+        self.alert_message={
+            "title":title,
+            "message":message
+        }
 
     # ---------------------------
     # Activity callback
@@ -203,6 +210,8 @@ class NoCameraFocusTracker:
             )
             self.stage = 1
             self.distraction_given = False
+
+            self.last_activity_time=time.time()
             return
 
         # -------- MISSED FIRST PRESENCE → ONE DISTRACTION
@@ -249,5 +258,10 @@ class NoCameraFocusTracker:
             self.stage = 4
             return
 
-        # -------- NORMAL FOCUS
-        self._set_status("Focused")
+        # -------- Final status decision
+        if self.is_idle:
+            self._set_status("Distracted")
+        elif self.content_distracted:
+            self._set_status("Distracted")
+        else:
+            self._set_status("Focused")

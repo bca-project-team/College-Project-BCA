@@ -3,9 +3,9 @@
 <head>
   <title>Focus Session</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <link id="favicon" rel='icon' href="/static/favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
+   
   <style>
     body {
       margin: 0;
@@ -87,6 +87,27 @@
       color: #22c55e;
       font-size: 14px;
     }
+    .alert-modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+
+.alert-box{
+  background:#020617;
+  padding:30px;
+  border-radius:14px;
+  width:300px;
+  text-align:center;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+}
   </style>
 </head>
 
@@ -125,10 +146,47 @@
   <div class="status" id="statusText">Session Running...</div>
 
 </div>
+<div id="alertModal" class="alert-modal">
+
+  <div class="alert-box">
+
+    <h3 id="alertTitle"></h3>
+
+    <p id="alertMessage"></p>
+
+    <button onclick="confirmPresence()">I'm Studying</button>
+
+  </div>
+
+</div>
 
 <script>
 let stream = null;
 let frameInterval = null;
+let blinkInterval = null;
+let originalTitle = document.title;
+function startTabBlink(){
+
+    if(blinkInterval) return;
+
+    blinkInterval = setInterval(()=>{
+
+        document.title =
+            document.title === "⚠ Focus Alert"
+            ? originalTitle
+            : "⚠ Focus Alert";
+
+    },1000);
+
+}
+function stopTabBlink(){
+
+    clearInterval(blinkInterval);
+    blinkInterval = null;
+
+    document.title = originalTitle;
+
+}
 
 /* ================= CAMERA ================= */
 
@@ -274,7 +332,14 @@ function startLiveMonitoring() {
         fetch("/live-stats")
             .then(res => res.json())
             .then(data => {
+                if(data.alert){
+                    document.getElementById("alertTitle").innerText = data.alert.title;
+                    document.getElementById("alertMessage").innerText = data.alert.message;
 
+                    document.getElementById("alertModal").style.display = "flex";
+                    document.getElementById("favicon").href='/static/alert.png';
+                    startTabBlink();
+    }
                 // If no active session, ignore
                 if (!data || data.status === "no_session") {
                     return;
@@ -310,6 +375,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 });
+</script>
+<script>
+  function confirmPresence(){
+
+    fetch("/presence-confirm",{method:"POST"})
+    .then(()=>{
+        document.getElementById("alertModal").style.display = "none";
+        document.getElementById("favicon").href='/static/favicon.png';
+        stopTabBlink();
+    });
+
+}
 </script>
 </body>
 </html>

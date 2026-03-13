@@ -258,8 +258,8 @@ def start():
             tracker = NoCameraFocusTracker(
                 user,
                 goal_seconds,
-                alert_sound="alert2.wav",
-                warning_sound="alert1.wav",
+                alert_sound="static/alert2.wav",
+                warning_sound="static/alert2.wav",
                 activity=activity,
                 topic=topic
             )
@@ -310,8 +310,10 @@ def live_stats():
         "focused_seconds": int(session_obj.focused_seconds),
         "distracted_seconds": int(session_obj.distracted_seconds),
         "focus_score": session_obj.calculate_score(),
-        "auto_stopped":getattr(tracker,"auto_stopped",False)
+        "auto_stopped":getattr(tracker,"auto_stopped",False),
+        "alert":getattr(tracker,"alert_message",None)
     }
+    tracker.alert_message=None
     if getattr(tracker,"auto_stopped",False):
         response['result']=getattr(tracker,"last_summary",None)
     return jsonify(response)
