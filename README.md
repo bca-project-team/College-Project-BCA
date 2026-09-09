@@ -206,7 +206,7 @@ These analytics help users identify patterns and improve study discipline.
 # Technology Stack
 
 ## Backend
-- Python
+- Python 3.12.10
 - Flask
 
 ## Frontend
